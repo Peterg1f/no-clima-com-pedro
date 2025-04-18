@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>No Clima com Pedro ☀️☁️</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffd700">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to top, #a8e0ff, #70cad1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+      background-image: url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: cover;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 40px;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    input, button {
+      padding: 12px;
+      margin: 8px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      background-color: #ffd700;
+      color: #333;
+      cursor: pointer;
+    }
+    .weather, .forecast {
+      margin-top: 30px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      width: 320px;
+      text-align: center;
+    }
+    .weather img, .forecast img {
+      width: 60px;
+      margin-bottom: 5px;
+    }
+    .forecast-day {
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>No Clima com Pedro ☀️☁️</h1>
+  <input type="text" id="cidade" placeholder="Digite a cidade" />
+  <button onclick="buscarClima()">Buscar</button>
+
+  <div class="weather" id="resultado" style="display: none;"></div>
+  <div class="forecast" id="previsao" style="display: none;"></div>
+
+  <script>
+    async function buscarClima() {
+      const cidade = document.getElementById('cidade').value;
+      const apiKey = 'f1538cf9562fbe3f1da422ea9ca83ea4';
+      const urlAtual = `https://api.openweathermap.org/data/2.5/weather?q=${cidade},BR&appid=${apiKey}&lang=pt_br&units=metric`;
+      const urlPrevisao = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade},BR&appid=${apiKey}&lang=pt_br&units=metric`;
+
+      try {
+        // Clima atual
+        const respostaAtual = await fetch(urlAtual);
+        if (!respostaAtual.ok) throw new Error("Cidade não encontrada");
+        const dados = await respostaAtual.json();
+
+        const icone = `https://openweathermap.org/img/wn/${dados.weather[0].icon}@2x.png`;
+
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('resultado').innerHTML = `
+          <img src="${icone}" alt="Ícone do clima">
+          <h2>${dados.name} - ${dados.sys.country}</h2>
+          <p><strong>Temperatura:</strong> ${dados.main.temp}°C</p>
+          <p><strong>Condição:</strong> ${dados.weather[0].description}</p>
+          <p><strong>Umidade:</strong> ${dados.main.humidity}%</p>
+          <p><strong>Vento:</strong> ${(dados.wind.speed * 3.6).toFixed(1)} km/h</p>
+        `;
+
+        // Previsão para os próximos dias
+        const respostaPrevisao = await fetch(urlPrevisao);
+        const dadosPrevisao = await respostaPrevisao.json();
+
+        const previsaoDias = {};
+
+        // Agrupar previsões por dia
+        dadosPrevisao.list.forEach(item => {
+          const data = item.dt_txt.split(" ")[0];
+          if (!previsaoDias[data]) previsaoDias[data] = [];
+          previsaoDias[data].push(item);
+        });
+
+        // Mostrar apenas os próximos 4 dias (excluindo hoje)
+        const dias = Object.keys(previsaoDias).slice(1, 5);
+
+        let htmlPrevisao = "<h3>Próximos Dias</h3>";
+        dias.forEach(dia => {
+          const mediaTemp = (previsaoDias[dia].reduce((acc, val) => acc + val.main.temp, 0) / previsaoDias[dia].length).toFixed(1);
+          const iconeDia = previsaoDias[dia][0].weather[0].icon;
+          const descricao = previsaoDias[dia][0].weather[0].description;
+
+          htmlPrevisao += `
+            <div class="forecast-day">
+              <p><strong>${dia}</strong></p>
+              <img src="https://openweathermap.org/img/wn/${iconeDia}@2x.png" alt="Ícone previsão">
+              <p>${descricao}</p>
+              <p>${mediaTemp}°C</p>
+            </div>
+          `;
+        });
+
+        document.getElementById('previsao').style.display = 'block';
+        document.getElementById('previsao').innerHTML = htmlPrevisao;
+
+      } catch (erro) {
+        document.getElementById('resultado').style.display = 'block';
+        document.getElementById('resultado').innerHTML = `<p style="color:red;">Erro: ${erro.message}</p>`;
+        document.getElementById('previsao').style.display = 'none';
+      }
+    }
+  </script>
+
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registrado com sucesso!'))
+        .catch(erro => console.log('Falha ao registrar o Service Worker:', erro));
+    }
+  </script>
+</body>
+</html>
