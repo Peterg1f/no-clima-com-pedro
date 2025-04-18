@@ -1,0 +1,17 @@
+
+{
+  "name": "No Clima com Pedro",
+  "short_name": "ClimaPedro",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#70cad1",
+  "theme_color": "#ffd700",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/emoji/96/sun-behind-cloud.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    }
+  ]
+}
